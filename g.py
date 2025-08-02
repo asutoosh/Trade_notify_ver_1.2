@@ -1459,21 +1459,30 @@ def handle_railway_errors():
 if __name__ == '__main__':
     print("🚀 Starting Enhanced Crypto Trading Dashboard...")
     
+    # Remove hardcoded credentials - CRITICAL FIX
+    TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+    TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
+    CSV_URL = os.getenv('CSV_URL')
+    
+    # Validate required environment variables
+    if not TELEGRAM_BOT_TOKEN:
+        print("❌ Error: TELEGRAM_BOT_TOKEN not set in environment variables")
+        exit(1)
+
+    if not TELEGRAM_CHAT_ID:
+        print("❌ Error: TELEGRAM_CHAT_ID not set in environment variables")
+        exit(1)
+
+    if not CSV_URL:
+        print("❌ Error: CSV_URL not set in environment variables")
+        exit(1)
+    
     # Run Railway error handling first
     print("🔧 Running Railway deployment checks...")
     railway_ok = handle_railway_errors()
     
     # Run diagnostics
     run_network_diagnostics()
-    
-    # Validate configuration
-    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
-        print("❌ Error: Telegram credentials not configured")
-        exit(1)
-    
-    if not CSV_URL:
-        print("❌ Error: CSV URL not configured")
-        exit(1)
     
     # Test connections
     print("🔍 Testing connections...")
@@ -1489,13 +1498,20 @@ if __name__ == '__main__':
     
     print("📱 Telegram notifications enabled")
     print("🔄 Auto-refresh every 30 seconds")
-    print("📊 Dashboard available at: http://localhost:8050")
     print("🛡️  Rate limiting and retry logic enabled")
     print("🔧 Enhanced connection handling with multiple fallback APIs")
     print("🚂 Railway deployment optimizations enabled")
     
-    try:
-        port = int(os.environ.get('PORT', 8050))
-        app.run_server(host='0.0.0.0', port=port, debug=False)
-    except Exception as e:
-        print(f"❌ Failed to start dashboard: {e}")
+    # Production vs Development server
+    port = int(os.environ.get('PORT', 8050))
+    is_production = os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('DYNO')
+    
+    if is_production:
+        print(f"🌐 Production mode - Server will be managed by gunicorn on port {port}")
+        # In production, gunicorn will handle the server
+    else:
+        print(f"🖥️  Development mode - Starting on http://localhost:{port}")
+        try:
+            app.run_server(host='0.0.0.0', port=port, debug=False)
+        except Exception as e:
+            print(f"❌ Failed to start dashboard: {e}")
