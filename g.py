@@ -42,11 +42,6 @@ def rate_limit(calls_per_second=5):
     return decorator
 
 
-# Load configuration from environment variables with fallbacks
-TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '8494532235:AAE5JaJAhImWYkCUXQxU3pvHNkGJYY749vk')
-TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID', '-4882717465')
-CSV_URL = os.getenv('CSV_URL', 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQgiqkaWzOnXJBIeNEzvUXaGPS0f3gHytC7A1wlohkFScEhVbururPv9amRuAop5ooqY_BJU23XKlL_/pub?output=csv')
-
 DEBUG_MODE = False
 
 # Cooldown configuration
@@ -1456,6 +1451,8 @@ def handle_railway_errors():
     return True
 
 
+server = app.server
+
 if __name__ == '__main__':
     print("🚀 Starting Enhanced Crypto Trading Dashboard...")
     
@@ -1515,3 +1512,4 @@ if __name__ == '__main__':
             app.run_server(host='0.0.0.0', port=port, debug=False)
         except Exception as e:
             print(f"❌ Failed to start dashboard: {e}")
+
