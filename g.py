@@ -961,8 +961,8 @@ def load_sheet_data(url):
     df, error = load_csv_with_fallbacks(url)
     if error:
         print(f"❌ CSV loading failed: {error}")
-        return None
-    return df
+        return None, error
+    return df, None
 
 
 @rate_limit(calls_per_second=5)
