@@ -1576,6 +1576,7 @@ def handle_railway_errors():
     
     return True
 
+server = app.server
 
 if __name__ == '__main__':
     print("🚀 Starting Enhanced Crypto Trading Dashboard...")
@@ -1584,71 +1585,67 @@ if __name__ == '__main__':
     if IS_RAILWAY:
         print("🚂 Railway deployment detected - applying optimizations...")
         print(f"🌐 Production mode - Server will be managed by gunicorn on port {RAILWAY_PORT}")
+        # In Railway, don't run the development server - let Gunicorn handle it
+        print("✅ App configured for Gunicorn - server object exposed")
+        
+        # Just run the diagnostics and exit - Gunicorn will start the server
+        print("🔧 Running Railway deployment checks...")
+        railway_ok = handle_railway_errors()
+        run_network_diagnostics()
+        
+        # Validate configuration
+        if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+            print("❌ Error: Telegram credentials not configured")
+            exit(1)
+        
+        if not CSV_URL:
+            print("❌ Error: CSV URL not configured")
+            exit(1)
+        
+        print("🎉 Railway configuration complete - Gunicorn will start the server")
+        
     else:
         print("💻 Local development mode detected")
-    
-    # Run Railway error handling first
-    print("🔧 Running Railway deployment checks...")
-    railway_ok = handle_railway_errors()
-    
-    # Run diagnostics
-    run_network_diagnostics()
-    
-    # Validate configuration
-    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
-        print("❌ Error: Telegram credentials not configured")
-        exit(1)
-    
-    if not CSV_URL:
-        print("❌ Error: CSV URL not configured")
-        exit(1)
-    
-    # Test connections
-    print("🔍 Testing connections...")
-    health = check_connection_health()
-    
-    for service, status in health.items():
-        status_emoji = "✅" if status else "❌"
-        service_name = service.replace('_', ' ').title()
-        print(f"{status_emoji} {service_name}: {'Connected' if status else 'Failed'}")
-    
-    # Railway-specific connection assessment
-    if IS_RAILWAY:
-        working_services = sum(health.values())
-        total_services = len(health)
-        print(f"📊 Railway Connection Summary: {working_services}/{total_services} services working")
         
-        if working_services >= 3:  # At least CSV, one crypto API, and Telegram
-            print("✅ Sufficient connectivity for Railway deployment")
-        else:
-            print("⚠️  Limited connectivity - some features may not work optimally")
-    
-    if not any(health.values()):
-        print("⚠️  Warning: No external services accessible. Check your internet connection.")
-    
-    print("📱 Telegram notifications enabled")
-    print("🔄 Auto-refresh every 30 seconds")
-    
-    if IS_RAILWAY:
-        print(f"📊 Dashboard will be available at Railway URL (port {RAILWAY_PORT})")
-    else:
+        # Run Railway error handling first
+        print("🔧 Running Railway deployment checks...")
+        railway_ok = handle_railway_errors()
+        
+        # Run diagnostics
+        run_network_diagnostics()
+        
+        # Validate configuration
+        if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+            print("❌ Error: Telegram credentials not configured")
+            exit(1)
+        
+        if not CSV_URL:
+            print("❌ Error: CSV URL not configured")
+            exit(1)
+        
+        # Test connections
+        print("🔍 Testing connections...")
+        health = check_connection_health()
+        
+        for service, status in health.items():
+            status_emoji = "✅" if status else "❌"
+            service_name = service.replace('_', ' ').title()
+            print(f"{status_emoji} {service_name}: {'Connected' if status else 'Failed'}")
+        
+        if not any(health.values()):
+            print("⚠️  Warning: No external services accessible. Check your internet connection.")
+        
+        print("📱 Telegram notifications enabled")
+        print("🔄 Auto-refresh every 30 seconds")
         print("📊 Dashboard available at: http://localhost:8050")
-    
-    print("🛡️  Rate limiting and retry logic enabled")
-    print("🔧 Enhanced connection handling with multiple fallback APIs")
-    print("🚂 Railway deployment optimizations enabled")
-    
-    try:
-        if IS_RAILWAY:
-            # For Railway, just start the app - gunicorn will handle the server
-            print("🚀 Starting Dash app for Railway deployment...")
-            app.run_server(host='0.0.0.0', port=RAILWAY_PORT, debug=False, dev_tools_hot_reload=False)
-        else:
-            # Local development
+        print("🛡️  Rate limiting and retry logic enabled")
+        print("🔧 Enhanced connection handling with multiple fallback APIs")
+        
+        try:
+            # Local development - run the development server
             port = int(os.environ.get('PORT', 8050))
             app.run_server(host='0.0.0.0', port=port, debug=False)
-    except Exception as e:
-        print(f"❌ Failed to start dashboard: {e}")
-        if IS_RAILWAY:
-            print("💡 Railway deployment failed - check logs for details")
-        exit(1)
+        except Exception as e:
+            print(f"❌ Failed to start dashboard: {e}")
+            exit(1)
+
